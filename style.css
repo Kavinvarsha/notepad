@@ -45,27 +45,26 @@ body {
   width: 100%;
   height: calc(100% - 50px);
   padding: 20px;
-  box-sizing: border-box;   /* Include padding in width */
+  box-sizing: border-box;
   outline: none;
   background: #fff0f5;
-  
   caret-color: #ff1493;
   overflow: auto;
   font-size: 16px;
-  white-space: pre-wrap;    /* Preserve line breaks */
-  word-wrap: break-word;    /* Wrap long words */
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 /* Draggable & Resizable Image */
 .resizable-draggable {
   display: inline-block;
-  resize: both;                /* Resize from corners */
+  resize: both;
   overflow: hidden;
   min-width: 50px;
   min-height: 50px;
   max-width: 90%;
   border: 1px dashed #ff3399;
-  position: absolute;          /* Absolute inside editor */
+  position: absolute;
   cursor: move;
 }
 
@@ -75,6 +74,5 @@ body {
   object-fit: contain;
   display: block;
   user-select: none;
-  pointer-events: none;        /* Parent div handles drag */
+  pointer-events: none;
 }
-

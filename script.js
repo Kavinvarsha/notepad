@@ -1,18 +1,19 @@
+
 const editor = document.getElementById("editor");
 
-// Formatting commands
+// Execute formatting commands
 function execCmd(command, value = null) {
   document.execCommand(command, false, value);
   editor.focus();
 }
 
-// Insert Hyperlink
+// Insert hyperlink
 function insertLink() {
   const url = prompt("Enter URL:", "https://");
   if (url) execCmd('createLink', url);
 }
 
-// Insert Table
+// Insert table
 function insertTable() {
   const rows = prompt("Rows:", 2);
   const cols = prompt("Columns:", 2);
@@ -30,17 +31,15 @@ function insertTable() {
   execCmd('insertHTML', table);
 }
 
-// Make image draggable
+// Make image draggable inside editor
 function makeImageDraggable(div) {
   let isDragging = false;
   let startX, startY, startLeft, startTop;
 
   div.addEventListener('mousedown', (e) => {
-    // Prevent drag if resizing (check if near edges)
+    // Ignore if resizing near corners
     const rect = div.getBoundingClientRect();
-    if (
-      e.offsetX > rect.width - 10 || e.offsetY > rect.height - 10
-    ) return; // user is resizing
+    if (e.offsetX > rect.width - 10 || e.offsetY > rect.height - 10) return;
 
     isDragging = true;
     startX = e.clientX;
@@ -66,8 +65,7 @@ function makeImageDraggable(div) {
   });
 }
 
-
-// Insert Image
+// Insert image from URL or local file
 function insertImage() {
   const choice = prompt("Insert from URL or local file? (url/file)");
   if (!choice) return;
@@ -104,29 +102,26 @@ function insertImage() {
   }
 }
 
-
-// Auto-save
+// Auto-save editor
 editor.addEventListener("input", () => {
   localStorage.setItem("barbie-richtext", editor.innerHTML);
 });
 
-// Load saved
+// Load saved content
 window.onload = () => {
   editor.innerHTML = localStorage.getItem("barbie-richtext") || "";
 };
 
-// New
+// New file
 document.getElementById("new-btn").addEventListener("click", () => {
   if(editor.innerHTML !== "" && !confirm("Clear current note?")) return;
   editor.innerHTML = "";
   localStorage.removeItem("barbie-richtext");
 });
 
-// Open
+// Open file
 const fileInput = document.getElementById("file-input");
-document.getElementById("open-btn").addEventListener("click", () => {
-  fileInput.click();
-});
+document.getElementById("open-btn").addEventListener("click", () => fileInput.click());
 fileInput.addEventListener("change", (e) => {
   const file = e.target.files[0];
   if(!file) return;
@@ -138,7 +133,7 @@ fileInput.addEventListener("change", (e) => {
   reader.readAsText(file);
 });
 
-// Save TXT/DOC/PDF
+// Save file (TXT/DOC/PDF)
 document.getElementById("save-btn").addEventListener("click", () => {
   const format = prompt("Save as (txt/pdf/doc):", "txt");
   if(!format) return;
@@ -157,12 +152,44 @@ document.getElementById("save-btn").addEventListener("click", () => {
     const doc = new jsPDF();
     const lines = editor.innerText.split("\n");
     let y = 10;
-    lines.forEach(line => {
-      doc.text(line, 10, y);
-      y += 10;
-    });
+    lines.forEach(line => { doc.text(line, 10, y); y += 10; });
     doc.save("note.pdf");
   } else {
     alert("Invalid format! Use txt, pdf, or doc.");
   }
 });
+
+// --- Document Operations ---
+
+// Clear formatting
+function clearFormatting() {
+  document.execCommand('removeFormat', false, null);
+  alert("Formatting cleared!");
+}
+
+// Reset editor
+function resetEditor() {
+  if(confirm("Are you sure you want to reset the editor?")) {
+    editor.innerHTML = "";
+    localStorage.removeItem("barbie-richtext");
+  }
+}
+
+// Copy plain text
+function copyPlainText() {
+  navigator.clipboard.writeText(editor.innerText);
+  alert("Copied as plain text!");
+}
+
+// Copy HTML
+function copyHTML() {
+  navigator.clipboard.writeText(editor.innerHTML);
+  alert("Copied as HTML!");
+}
+
+// Preview
+function previewContent() {
+  const previewWindow = window.open("", "_blank");
+  previewWindow.document.write(editor.innerHTML);
+  previewWindow.document.close();
+}
