@@ -52,7 +52,6 @@ function makeImageDraggableAndResizable(container) {
   const img = container.querySelector('img');
   const handle = container.querySelector('.resize-handle');
 
-  // Dragging
   let isDragging = false, startX, startY, origX, origY;
   container.addEventListener('mousedown', e => {
     if (e.target === handle) return;
@@ -74,7 +73,6 @@ function makeImageDraggableAndResizable(container) {
   });
   document.addEventListener('mouseup', () => { isDragging = false; });
 
-  // Resizing
   let isResizing = false, startWidth, startHeight;
   handle.addEventListener('mousedown', e => {
     isResizing = true;
@@ -140,6 +138,7 @@ editor.addEventListener("input", () => {
 window.onload = () => {
   editor.innerHTML = localStorage.getItem("barbie-richtext") || "";
   updateToolbarState();
+  resizeCanvas(); // ensure drawing layer fits editor
 };
 
 // --- New file ---
@@ -147,6 +146,7 @@ document.getElementById("new-btn").addEventListener("click", () => {
   if(editor.innerHTML !== "" && !confirm("Clear current note?")) return;
   editor.innerHTML = "";
   localStorage.removeItem("barbie-richtext");
+  clearDrawing();
 });
 
 // --- Open file ---
@@ -214,56 +214,102 @@ document.getElementById("save-btn").addEventListener("click", () => {
 });
 
 // --- Document Operations ---
-function clearFormatting() {
-  document.execCommand('removeFormat', false, null);
-  alert("Formatting cleared!");
-}
-function resetEditor() {
-  if(confirm("Are you sure you want to reset the editor?")) {
-    editor.innerHTML = "";
-    localStorage.removeItem("barbie-richtext");
-  }
-}
-function copyPlainText() {
-  navigator.clipboard.writeText(editor.innerText);
-  alert("Copied as plain text!");
-}
-function copyHTML() {
-  navigator.clipboard.writeText(editor.innerHTML);
-  alert("Copied as HTML!");
-}
-function previewContent() {
-  const previewWindow = window.open("", "_blank");
-  previewWindow.document.write(editor.innerHTML);
-  previewWindow.document.close();
-}
+function clearFormatting() { document.execCommand('removeFormat', false, null); alert("Formatting cleared!"); }
+function resetEditor() { if(confirm("Are you sure you want to reset the editor?")) { editor.innerHTML = ""; localStorage.removeItem("barbie-richtext"); clearDrawing(); } }
+function copyPlainText() { navigator.clipboard.writeText(editor.innerText); alert("Copied as plain text!"); }
+function copyHTML() { navigator.clipboard.writeText(editor.innerHTML); alert("Copied as HTML!"); }
+function previewContent() { const previewWindow = window.open("", "_blank"); previewWindow.document.write(editor.innerHTML); previewWindow.document.close(); }
 
 // --- Active Toolbar Highlighting ---
 function updateToolbarState() {
   boldBtn.classList.toggle('active', document.queryCommandState('bold'));
   italicBtn.classList.toggle('active', document.queryCommandState('italic'));
   underlineBtn.classList.toggle('active', document.queryCommandState('underline'));
-
   leftAlignBtn.classList.toggle('active', document.queryCommandState('justifyLeft'));
   centerAlignBtn.classList.toggle('active', document.queryCommandState('justifyCenter'));
   rightAlignBtn.classList.toggle('active', document.queryCommandState('justifyRight'));
   justifyBtn.classList.toggle('active', document.queryCommandState('justifyFull'));
-
   ulBtn.classList.toggle('active', document.queryCommandState('insertUnorderedList'));
   olBtn.classList.toggle('active', document.queryCommandState('insertOrderedList'));
-
   if (fontSizeSelect) fontSizeSelect.value = document.queryCommandValue('fontSize') || '3';
   if (fontStyleSelect) fontStyleSelect.value = document.queryCommandValue('fontName').replace(/["']/g, '') || 'Comic Sans MS';
   if (headingsSelect) headingsSelect.value = document.queryCommandValue('formatBlock').replace(/["']/g, '') || '';
 }
-
-// --- Event listeners for active state ---
 editor.addEventListener('keyup', updateToolbarState);
 editor.addEventListener('mouseup', updateToolbarState);
 editor.addEventListener('focus', updateToolbarState);
 editor.addEventListener('blur', updateToolbarState);
 
-// --- Update dropdowns on change ---
+// --- Update dropdowns ---
 if (fontSizeSelect) fontSizeSelect.addEventListener('change', () => execCmd('fontSize', fontSizeSelect.value));
 if (fontStyleSelect) fontStyleSelect.addEventListener('change', () => execCmd('fontName', fontStyleSelect.value));
 if (headingsSelect) headingsSelect.addEventListener('change', () => execCmd('formatBlock', headingsSelect.value));
+
+// --- Drawing Feature ---
+const canvas = document.createElement('canvas');
+canvas.id = 'draw-canvas';
+document.body.appendChild(canvas);
+const ctx = canvas.getContext('2d');
+let drawing = false;
+let currentTool = 'pen';
+let lastX = 0, lastY = 0;
+
+function resizeCanvas() {
+  canvas.width = editor.offsetWidth;
+  canvas.height = editor.offsetHeight;
+  canvas.style.position = "absolute";
+  canvas.style.top = editor.offsetTop + "px";
+  canvas.style.left = editor.offsetLeft + "px";
+  canvas.style.zIndex = 20;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function setTool(tool) {
+  currentTool = tool;
+  if(tool === "pen") ctx.globalAlpha = 1.0;
+  if(tool === "highlighter") ctx.globalAlpha = 0.3;
+  if(tool === "eraser") ctx.globalCompositeOperation = (tool==="eraser")?"destination-out":"source-over";
+}
+
+function getXY(e) {
+  if(e.touches) e = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
+function startDraw(e) {
+  drawing = true;
+  const pos = getXY(e);
+  lastX = pos.x;
+  lastY = pos.y;
+  e.preventDefault();
+}
+function draw(e) {
+  if(!drawing) return;
+  const pos = getXY(e);
+  ctx.strokeStyle = currentTool==='highlighter'?"#ff66b2":"#ff1493";
+  ctx.lineWidth = currentTool==='highlighter'?15:3;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(lastX,lastY);
+  ctx.lineTo(pos.x,pos.y);
+  ctx.stroke();
+  lastX=pos.x; lastY=pos.y;
+  e.preventDefault();
+}
+function endDraw(e){ drawing=false; }
+canvas.addEventListener("mousedown", startDraw);
+canvas.addEventListener("mousemove", draw);
+canvas.addEventListener("mouseup", endDraw);
+canvas.addEventListener("mouseleave", endDraw);
+canvas.addEventListener("touchstart", startDraw);
+canvas.addEventListener("touchmove", draw);
+canvas.addEventListener("touchend", endDraw);
+function clearDrawing(){ ctx.clearRect(0,0,canvas.width,canvas.height); }
+
+// --- Toolbar drawing buttons ---
+document.getElementById('pen-btn')?.addEventListener('click', ()=>setTool('pen'));
+document.getElementById('highlighter-btn')?.addEventListener('click', ()=>setTool('highlighter'));
+document.getElementById('eraser-btn')?.addEventListener('click', ()=>setTool('eraser'));
+document.getElementById('clear-draw-btn')?.addEventListener('click', ()=>clearDrawing());
