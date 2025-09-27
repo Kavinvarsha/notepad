@@ -9,9 +9,9 @@
 <body>
   <div class="toolbar">
     <!-- Text formatting -->
-    <button onclick="execCmd('bold')" title="Bold"><b>B</b></button>
-    <button onclick="execCmd('italic')" title="Italic"><i>I</i></button>
-    <button onclick="execCmd('underline')" title="Underline"><u>U</u></button>
+     <button id="bold-btn" onclick="execCmd('bold')" title="Bold">B</button>
+<button id="italic-btn" onclick="execCmd('italic')" title="Italic">I</button>
+<button id="underline-btn" onclick="execCmd('underline')" title="Underline">U</button>
 
     <!-- Headings -->
     <select onchange="execCmd('formatBlock', this.value)">

@@ -1,19 +1,35 @@
-
 const editor = document.getElementById("editor");
 
-// Execute formatting commands
+// --- Toolbar buttons ---
+const boldBtn = document.getElementById('bold-btn');
+const italicBtn = document.getElementById('italic-btn');
+const underlineBtn = document.getElementById('underline-btn');
+const leftAlignBtn = document.getElementById('left-btn');
+const centerAlignBtn = document.getElementById('center-btn');
+const rightAlignBtn = document.getElementById('right-btn');
+const justifyBtn = document.getElementById('justify-btn');
+const ulBtn = document.getElementById('ul-btn');
+const olBtn = document.getElementById('ol-btn');
+
+// --- Dropdowns ---
+const fontSizeSelect = document.getElementById('font-size-select');
+const fontStyleSelect = document.getElementById('font-style-select');
+const headingsSelect = document.getElementById('headings-select');
+
+// --- Execute formatting commands ---
 function execCmd(command, value = null) {
   document.execCommand(command, false, value);
   editor.focus();
+  updateToolbarState();
 }
 
-// Insert hyperlink
+// --- Insert hyperlink ---
 function insertLink() {
   const url = prompt("Enter URL:", "https://");
   if (url) execCmd('createLink', url);
 }
 
-// Insert table
+// --- Insert table ---
 function insertTable() {
   const rows = prompt("Rows:", 2);
   const cols = prompt("Columns:", 2);
@@ -31,7 +47,7 @@ function insertTable() {
   execCmd('insertHTML', table);
 }
 
-// Make image draggable inside editor
+// --- Make image draggable & resizable ---
 function makeImageDraggableAndResizable(container) {
   const img = container.querySelector('img');
   const handle = container.querySelector('.resize-handle');
@@ -39,7 +55,7 @@ function makeImageDraggableAndResizable(container) {
   // Dragging
   let isDragging = false, startX, startY, origX, origY;
   container.addEventListener('mousedown', e => {
-    if (e.target === handle) return; // skip dragging while resizing
+    if (e.target === handle) return;
     isDragging = true;
     startX = e.clientX;
     startY = e.clientY;
@@ -79,8 +95,7 @@ function makeImageDraggableAndResizable(container) {
   document.addEventListener('mouseup', () => { isResizing = false; });
 }
 
-
-// Insert image from URL or local file
+// --- Insert image ---
 function insertImage() {
   const choice = prompt("Insert from URL or local file? (url/file)");
   if (!choice) return;
@@ -88,17 +103,13 @@ function insertImage() {
   const addImageContainer = (src) => {
     const container = document.createElement('span');
     container.className = 'draggable-image';
-
     const img = document.createElement('img');
     img.src = src;
-
     const handle = document.createElement('span');
     handle.className = 'resize-handle';
-
     container.appendChild(img);
     container.appendChild(handle);
     editor.appendChild(container);
-
     makeImageDraggableAndResizable(container);
   };
 
@@ -120,24 +131,25 @@ function insertImage() {
   } else alert("Invalid option! Type 'url' or 'file'.");
 }
 
-// Auto-save editor
+// --- Auto-save ---
 editor.addEventListener("input", () => {
   localStorage.setItem("barbie-richtext", editor.innerHTML);
 });
 
-// Load saved content
+// --- Load saved content ---
 window.onload = () => {
   editor.innerHTML = localStorage.getItem("barbie-richtext") || "";
+  updateToolbarState();
 };
 
-// New file
+// --- New file ---
 document.getElementById("new-btn").addEventListener("click", () => {
   if(editor.innerHTML !== "" && !confirm("Clear current note?")) return;
   editor.innerHTML = "";
   localStorage.removeItem("barbie-richtext");
 });
 
-// Open file
+// --- Open file ---
 const fileInput = document.getElementById("file-input");
 document.getElementById("open-btn").addEventListener("click", () => fileInput.click());
 fileInput.addEventListener("change", (e) => {
@@ -147,16 +159,15 @@ fileInput.addEventListener("change", (e) => {
   reader.onload = (e) => {
     editor.innerHTML = e.target.result;
     localStorage.setItem("barbie-richtext", editor.innerHTML);
+    updateToolbarState();
   };
   reader.readAsText(file);
 });
 
-// Save file (TXT/DOC/PDF)
+// --- Save file ---
 document.getElementById("save-btn").addEventListener("click", () => {
   const format = prompt("Export as (doc/pdf):", "doc");
   if (!format) return;
-
-  // Prompt for Title & Author
   const title = prompt("Enter document title:", "My Note") || "My Note";
   const author = prompt("Enter author name:", "Anonymous") || "Anonymous";
 
@@ -164,90 +175,95 @@ document.getElementById("save-btn").addEventListener("click", () => {
   const contentText = editor.innerText;
 
   if (format.toLowerCase() === "doc") {
-    // Create Word document
     const blob = new Blob(
-      [
-        `<!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <title>${title}</title>
-        </head>
-        <body>
-        <h1>${title}</h1>
-        <p><em>Author: ${author}</em></p>
-        ${contentHTML}
-        </body>
-        </html>`
-      ],
+      [`<!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${title}</title>
+      </head>
+      <body>
+      <h1>${title}</h1>
+      <p><em>Author: ${author}</em></p>
+      ${contentHTML}
+      </body>
+      </html>`],
       { type: "application/msword" }
     );
-
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = title.replace(/\s/g, "_") + ".doc";
     link.click();
     URL.revokeObjectURL(link.href);
     alert("Document exported as Word (.doc)");
-  } 
-  else if (format.toLowerCase() === "pdf") {
-    // Export PDF using jsPDF
+  } else if (format.toLowerCase() === "pdf") {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-
-    // Add metadata
-    doc.setProperties({
-      title: title,
-      author: author
-    });
-
+    doc.setProperties({ title: title, author: author });
     const lines = contentText.split("\n");
     let y = 10;
     lines.forEach(line => {
       doc.text(line, 10, y);
       y += 10;
     });
-
     doc.save(title.replace(/\s/g, "_") + ".pdf");
     alert("Document exported as PDF");
-  } 
-  else {
+  } else {
     alert("Invalid format! Please enter 'doc' or 'pdf'.");
   }
 });
 
-
 // --- Document Operations ---
-
-// Clear formatting
 function clearFormatting() {
   document.execCommand('removeFormat', false, null);
   alert("Formatting cleared!");
 }
-
-// Reset editor
 function resetEditor() {
   if(confirm("Are you sure you want to reset the editor?")) {
     editor.innerHTML = "";
     localStorage.removeItem("barbie-richtext");
   }
 }
-
-// Copy plain text
 function copyPlainText() {
   navigator.clipboard.writeText(editor.innerText);
   alert("Copied as plain text!");
 }
-
-// Copy HTML
 function copyHTML() {
   navigator.clipboard.writeText(editor.innerHTML);
   alert("Copied as HTML!");
 }
-
-// Preview
 function previewContent() {
   const previewWindow = window.open("", "_blank");
   previewWindow.document.write(editor.innerHTML);
   previewWindow.document.close();
 }
+
+// --- Active Toolbar Highlighting ---
+function updateToolbarState() {
+  boldBtn.classList.toggle('active', document.queryCommandState('bold'));
+  italicBtn.classList.toggle('active', document.queryCommandState('italic'));
+  underlineBtn.classList.toggle('active', document.queryCommandState('underline'));
+
+  leftAlignBtn.classList.toggle('active', document.queryCommandState('justifyLeft'));
+  centerAlignBtn.classList.toggle('active', document.queryCommandState('justifyCenter'));
+  rightAlignBtn.classList.toggle('active', document.queryCommandState('justifyRight'));
+  justifyBtn.classList.toggle('active', document.queryCommandState('justifyFull'));
+
+  ulBtn.classList.toggle('active', document.queryCommandState('insertUnorderedList'));
+  olBtn.classList.toggle('active', document.queryCommandState('insertOrderedList'));
+
+  if (fontSizeSelect) fontSizeSelect.value = document.queryCommandValue('fontSize') || '3';
+  if (fontStyleSelect) fontStyleSelect.value = document.queryCommandValue('fontName').replace(/["']/g, '') || 'Comic Sans MS';
+  if (headingsSelect) headingsSelect.value = document.queryCommandValue('formatBlock').replace(/["']/g, '') || '';
+}
+
+// --- Event listeners for active state ---
+editor.addEventListener('keyup', updateToolbarState);
+editor.addEventListener('mouseup', updateToolbarState);
+editor.addEventListener('focus', updateToolbarState);
+editor.addEventListener('blur', updateToolbarState);
+
+// --- Update dropdowns on change ---
+if (fontSizeSelect) fontSizeSelect.addEventListener('change', () => execCmd('fontSize', fontSizeSelect.value));
+if (fontStyleSelect) fontStyleSelect.addEventListener('change', () => execCmd('fontName', fontStyleSelect.value));
+if (headingsSelect) headingsSelect.addEventListener('change', () => execCmd('formatBlock', headingsSelect.value));
