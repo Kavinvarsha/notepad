@@ -32,59 +32,79 @@ function insertTable() {
 }
 
 // Make image draggable inside editor
-function makeImageDraggable(div) {
-  let isDragging = false;
-  let startX, startY, startLeft, startTop;
+function makeImageDraggableAndResizable(container) {
+  const img = container.querySelector('img');
+  const handle = container.querySelector('.resize-handle');
 
-  div.addEventListener('mousedown', (e) => {
-    // Ignore if resizing near corners
-    const rect = div.getBoundingClientRect();
-    if (e.offsetX > rect.width - 10 || e.offsetY > rect.height - 10) return;
-
+  // Dragging
+  let isDragging = false, startX, startY, origX, origY;
+  container.addEventListener('mousedown', e => {
+    if (e.target === handle) return; // skip dragging while resizing
     isDragging = true;
     startX = e.clientX;
     startY = e.clientY;
-    startLeft = div.offsetLeft;
-    startTop = div.offsetTop;
-    div.style.zIndex = 1000;
+    const rect = container.getBoundingClientRect();
+    origX = rect.left + window.scrollX;
+    origY = rect.top + window.scrollY;
+    e.preventDefault();
   });
-
-  document.addEventListener('mousemove', (e) => {
+  document.addEventListener('mousemove', e => {
     if (!isDragging) return;
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
-    div.style.left = startLeft + dx + 'px';
-    div.style.top = startTop + dy + 'px';
+    container.style.position = 'relative';
+    container.style.left = dx + 'px';
+    container.style.top = dy + 'px';
   });
+  document.addEventListener('mouseup', () => { isDragging = false; });
 
-  document.addEventListener('mouseup', () => {
-    if (isDragging) {
-      isDragging = false;
-      div.style.zIndex = 'auto';
-    }
+  // Resizing
+  let isResizing = false, startWidth, startHeight;
+  handle.addEventListener('mousedown', e => {
+    isResizing = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    startWidth = img.offsetWidth;
+    startHeight = img.offsetHeight;
+    e.stopPropagation();
+    e.preventDefault();
   });
+  document.addEventListener('mousemove', e => {
+    if (!isResizing) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    img.style.width = startWidth + dx + 'px';
+    img.style.height = startHeight + dy + 'px';
+  });
+  document.addEventListener('mouseup', () => { isResizing = false; });
 }
+
 
 // Insert image from URL or local file
 function insertImage() {
   const choice = prompt("Insert from URL or local file? (url/file)");
   if (!choice) return;
 
-  const addImageDiv = (src) => {
-    const div = document.createElement('div');
-    div.className = 'resizable-draggable';
-    div.style.left = '50px';
-    div.style.top = '50px';
+  const addImageContainer = (src) => {
+    const container = document.createElement('span');
+    container.className = 'draggable-image';
+
     const img = document.createElement('img');
     img.src = src;
-    div.appendChild(img);
-    editor.appendChild(div);
-    makeImageDraggable(div);
+
+    const handle = document.createElement('span');
+    handle.className = 'resize-handle';
+
+    container.appendChild(img);
+    container.appendChild(handle);
+    editor.appendChild(container);
+
+    makeImageDraggableAndResizable(container);
   };
 
   if (choice.toLowerCase() === 'url') {
     const url = prompt("Enter Image URL:");
-    if (url) addImageDiv(url);
+    if (url) addImageContainer(url);
   } else if (choice.toLowerCase() === 'file') {
     const fileInput = document.createElement("input");
     fileInput.type = "file";
@@ -93,13 +113,11 @@ function insertImage() {
       const file = fileInput.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = (e) => addImageDiv(e.target.result);
+      reader.onload = e => addImageContainer(e.target.result);
       reader.readAsDataURL(file);
     };
     fileInput.click();
-  } else {
-    alert("Invalid option! Type 'url' or 'file'.");
-  }
+  } else alert("Invalid option! Type 'url' or 'file'.");
 }
 
 // Auto-save editor
@@ -135,29 +153,69 @@ fileInput.addEventListener("change", (e) => {
 
 // Save file (TXT/DOC/PDF)
 document.getElementById("save-btn").addEventListener("click", () => {
-  const format = prompt("Save as (txt/pdf/doc):", "txt");
-  if(!format) return;
+  const format = prompt("Export as (doc/pdf):", "doc");
+  if (!format) return;
 
-  const content = editor.innerHTML;
+  // Prompt for Title & Author
+  const title = prompt("Enter document title:", "My Note") || "My Note";
+  const author = prompt("Enter author name:", "Anonymous") || "Anonymous";
 
-  if(format.toLowerCase() === "txt" || format.toLowerCase() === "doc") {
-    const blob = new Blob([content], { type: "text/plain" });
+  const contentHTML = editor.innerHTML;
+  const contentText = editor.innerText;
+
+  if (format.toLowerCase() === "doc") {
+    // Create Word document
+    const blob = new Blob(
+      [
+        `<!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>${title}</title>
+        </head>
+        <body>
+        <h1>${title}</h1>
+        <p><em>Author: ${author}</em></p>
+        ${contentHTML}
+        </body>
+        </html>`
+      ],
+      { type: "application/msword" }
+    );
+
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = format.toLowerCase() === "txt" ? "note.txt" : "note.doc";
+    link.download = title.replace(/\s/g, "_") + ".doc";
     link.click();
     URL.revokeObjectURL(link.href);
-  } else if(format.toLowerCase() === "pdf") {
+    alert("Document exported as Word (.doc)");
+  } 
+  else if (format.toLowerCase() === "pdf") {
+    // Export PDF using jsPDF
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    const lines = editor.innerText.split("\n");
+
+    // Add metadata
+    doc.setProperties({
+      title: title,
+      author: author
+    });
+
+    const lines = contentText.split("\n");
     let y = 10;
-    lines.forEach(line => { doc.text(line, 10, y); y += 10; });
-    doc.save("note.pdf");
-  } else {
-    alert("Invalid format! Use txt, pdf, or doc.");
+    lines.forEach(line => {
+      doc.text(line, 10, y);
+      y += 10;
+    });
+
+    doc.save(title.replace(/\s/g, "_") + ".pdf");
+    alert("Document exported as PDF");
+  } 
+  else {
+    alert("Invalid format! Please enter 'doc' or 'pdf'.");
   }
 });
+
 
 // --- Document Operations ---
 
