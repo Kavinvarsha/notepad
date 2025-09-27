@@ -48,7 +48,7 @@ body {
   box-sizing: border-box;   /* Include padding in width */
   outline: none;
   background: #fff0f5;
-  color: #d6336c;
+  
   caret-color: #ff1493;
   overflow: auto;
   font-size: 16px;
