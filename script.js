@@ -12,14 +12,17 @@ function insertLink() {
   if (url) execCmd('createLink', url);
 }
 
-// Insert Image
+// Insert Image (resizable)
 function insertImage() {
   const choice = prompt("Insert from URL or local file? (type 'url' or 'file')");
   if (!choice) return;
 
   if (choice.toLowerCase() === 'url') {
     const url = prompt("Enter Image URL:");
-    if (url) execCmd('insertImage', url);
+    if (url) {
+      const html = `<div class="resizable-image"><img src="${url}" alt="image"></div>`;
+      execCmd('insertHTML', html);
+    }
   } else if (choice.toLowerCase() === 'file') {
     const fileInput = document.createElement("input");
     fileInput.type = "file";
@@ -29,7 +32,8 @@ function insertImage() {
       if (!file) return;
       const reader = new FileReader();
       reader.onload = (e) => {
-        execCmd('insertImage', e.target.result);
+        const html = `<div class="resizable-image"><img src="${e.target.result}" alt="image"></div>`;
+        execCmd('insertHTML', html);
       };
       reader.readAsDataURL(file);
     };

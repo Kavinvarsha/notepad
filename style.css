@@ -55,3 +55,24 @@ body {
   overflow: auto;
   font-size: 16px;
 }
+
+
+/* Image container to allow resizing from every corner */
+.resizable-image {
+  display: inline-block;
+  resize: both;            /* Allow width & height resizing */
+  overflow: hidden;
+  max-width: 100%;
+  min-width: 20px;
+  min-height: 20px;
+  border: 1px dashed #ff3399;
+  position: relative;
+}
+
+.resizable-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;    /* maintain aspect ratio while resizing */
+  cursor: move;           /* indicate draggable area */
+}
