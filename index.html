@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barbie Rich Text Notepad</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <!-- Text formatting -->
+    <button onclick="execCmd('bold')" title="Bold"><b>B</b></button>
+    <button onclick="execCmd('italic')" title="Italic"><i>I</i></button>
+    <button onclick="execCmd('underline')" title="Underline"><u>U</u></button>
+
+    <!-- Headings -->
+    <select onchange="execCmd('formatBlock', this.value)">
+      <option value="">Normal</option>
+      <option value="H1">H1</option>
+      <option value="H2">H2</option>
+      <option value="H3">H3</option>
+    </select>
+
+    <!-- Font size -->
+    <select onchange="execCmd('fontSize', this.value)">
+      <option value="3">Normal</option>
+      <option value="4">Large</option>
+      <option value="5">Larger</option>
+      <option value="6">Huge</option>
+    </select>
+
+    <!-- Font style -->
+    <select onchange="execCmd('fontName', this.value)">
+      <option value="Comic Sans MS">Comic Sans</option>
+      <option value="Arial">Arial</option>
+      <option value="Verdana">Verdana</option>
+    </select>
+
+    <!-- Alignment -->
+    <button onclick="execCmd('justifyLeft')" title="Left">Left</button>
+    <button onclick="execCmd('justifyCenter')" title="Center">Center</button>
+    <button onclick="execCmd('justifyRight')" title="Right">Right</button>
+    <button onclick="execCmd('justifyFull')" title="Justify">Justify</button>
+
+    <!-- Lists -->
+    <button onclick="execCmd('insertUnorderedList')" title="Unordered List">&#8226; List</button>
+    <button onclick="execCmd('insertOrderedList')" title="Ordered List">1. List</button>
+    <button onclick="execCmd('indent')" title="Increase Indent">&#8594; Indent</button>
+    <button onclick="execCmd('outdent')" title="Decrease Indent">&#8592; Outdent</button>
+
+    <!-- Colors -->
+    <input type="color" onchange="execCmd('foreColor', this.value)" title="Text Color">
+    <input type="color" onchange="execCmd('hiliteColor', this.value)" title="Highlight Color">
+
+    <!-- Insert Options -->
+    <button onclick="insertLink()" title="Insert Hyperlink">Link</button>
+    <button onclick="insertImage()" title="Insert Image">Image</button>
+    <button onclick="insertTable()" title="Insert Table">Table</button>
+
+    <!-- File actions -->
+    <button id="new-btn">New</button>
+    <button id="open-btn">Open</button>
+    <button id="save-btn">Save</button>
+    <input type="file" id="file-input" accept=".html,.txt,.doc" style="display:none">
+  </div>
+
+  <!-- Editable content area -->
+  <div id="editor" contenteditable="true" placeholder="Start typing..."></div>
+
+  <script src="script.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</body>
+</html>

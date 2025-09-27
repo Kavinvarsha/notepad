@@ -1,0 +1,57 @@
+/* Barbie Theme Notepad */
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  background: #ffe6f0;
+}
+
+.toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50px;
+  background: linear-gradient(to right, #ff99cc, #ff66b2);
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+  box-sizing: border-box;
+  z-index: 10;
+  border-bottom: 2px solid #ff3399;
+  gap: 5px;
+  overflow-x: auto;
+}
+
+.toolbar button, .toolbar select, .toolbar input[type=color] {
+  cursor: pointer;
+  padding: 5px 10px;
+  font-size: 14px;
+  border-radius: 5px;
+  border: 1px solid #ff3399;
+  background-color: #ff66b2;
+  color: white;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.toolbar button:hover, .toolbar select:hover, .toolbar input[type=color]:hover {
+  background-color: #ff3399;
+}
+
+#editor {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 50px);
+  padding: 20px;
+  box-sizing: border-box;
+  outline: none;
+  background: #fff0f5;
+  color: #d6336c;
+  caret-color: #ff1493;
+  overflow: auto;
+  font-size: 16px;
+}
