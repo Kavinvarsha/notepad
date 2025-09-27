@@ -1,6 +1,6 @@
 const editor = document.getElementById("editor");
 
-// Execute formatting commands
+// Formatting commands
 function execCmd(command, value = null) {
   document.execCommand(command, false, value);
   editor.focus();
@@ -12,41 +12,10 @@ function insertLink() {
   if (url) execCmd('createLink', url);
 }
 
-// Insert Image (resizable)
-function insertImage() {
-  const choice = prompt("Insert from URL or local file? (type 'url' or 'file')");
-  if (!choice) return;
-
-  if (choice.toLowerCase() === 'url') {
-    const url = prompt("Enter Image URL:");
-    if (url) {
-      const html = `<div class="resizable-image"><img src="${url}" alt="image"></div>`;
-      execCmd('insertHTML', html);
-    }
-  } else if (choice.toLowerCase() === 'file') {
-    const fileInput = document.createElement("input");
-    fileInput.type = "file";
-    fileInput.accept = "image/*";
-    fileInput.onchange = () => {
-      const file = fileInput.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const html = `<div class="resizable-image"><img src="${e.target.result}" alt="image"></div>`;
-        execCmd('insertHTML', html);
-      };
-      reader.readAsDataURL(file);
-    };
-    fileInput.click();
-  } else {
-    alert("Invalid option! Type 'url' or 'file'.");
-  }
-}
-
 // Insert Table
 function insertTable() {
-  const rows = prompt("Number of rows:", 2);
-  const cols = prompt("Number of columns:", 2);
+  const rows = prompt("Rows:", 2);
+  const cols = prompt("Columns:", 2);
   if (!rows || !cols) return;
 
   let table = "<table style='border-collapse: collapse; width: auto;'>";
@@ -61,12 +30,87 @@ function insertTable() {
   execCmd('insertHTML', table);
 }
 
-// Auto-save content
+// Make image draggable
+function makeImageDraggable(div) {
+  let isDragging = false;
+  let startX, startY, startLeft, startTop;
+
+  div.addEventListener('mousedown', (e) => {
+    // Prevent drag if resizing (check if near edges)
+    const rect = div.getBoundingClientRect();
+    if (
+      e.offsetX > rect.width - 10 || e.offsetY > rect.height - 10
+    ) return; // user is resizing
+
+    isDragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    startLeft = div.offsetLeft;
+    startTop = div.offsetTop;
+    div.style.zIndex = 1000;
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    div.style.left = startLeft + dx + 'px';
+    div.style.top = startTop + dy + 'px';
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      div.style.zIndex = 'auto';
+    }
+  });
+}
+
+
+// Insert Image
+function insertImage() {
+  const choice = prompt("Insert from URL or local file? (url/file)");
+  if (!choice) return;
+
+  const addImageDiv = (src) => {
+    const div = document.createElement('div');
+    div.className = 'resizable-draggable';
+    div.style.left = '50px';
+    div.style.top = '50px';
+    const img = document.createElement('img');
+    img.src = src;
+    div.appendChild(img);
+    editor.appendChild(div);
+    makeImageDraggable(div);
+  };
+
+  if (choice.toLowerCase() === 'url') {
+    const url = prompt("Enter Image URL:");
+    if (url) addImageDiv(url);
+  } else if (choice.toLowerCase() === 'file') {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*";
+    fileInput.onchange = () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => addImageDiv(e.target.result);
+      reader.readAsDataURL(file);
+    };
+    fileInput.click();
+  } else {
+    alert("Invalid option! Type 'url' or 'file'.");
+  }
+}
+
+
+// Auto-save
 editor.addEventListener("input", () => {
   localStorage.setItem("barbie-richtext", editor.innerHTML);
 });
 
-// Load saved content
+// Load saved
 window.onload = () => {
   editor.innerHTML = localStorage.getItem("barbie-richtext") || "";
 };
@@ -78,7 +122,7 @@ document.getElementById("new-btn").addEventListener("click", () => {
   localStorage.removeItem("barbie-richtext");
 });
 
-// Open file
+// Open
 const fileInput = document.getElementById("file-input");
 document.getElementById("open-btn").addEventListener("click", () => {
   fileInput.click();
@@ -94,7 +138,7 @@ fileInput.addEventListener("change", (e) => {
   reader.readAsText(file);
 });
 
-// Save file as TXT, PDF, DOC
+// Save TXT/DOC/PDF
 document.getElementById("save-btn").addEventListener("click", () => {
   const format = prompt("Save as (txt/pdf/doc):", "txt");
   if(!format) return;
@@ -108,7 +152,6 @@ document.getElementById("save-btn").addEventListener("click", () => {
     link.download = format.toLowerCase() === "txt" ? "note.txt" : "note.doc";
     link.click();
     URL.revokeObjectURL(link.href);
-
   } else if(format.toLowerCase() === "pdf") {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();

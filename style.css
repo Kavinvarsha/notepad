@@ -1,8 +1,6 @@
-/* Barbie Theme Notepad */
 body {
   margin: 0;
   padding: 0;
-  height: 100%;
   font-family: 'Comic Sans MS', cursive, sans-serif;
   background: #ffe6f0;
 }
@@ -47,32 +45,36 @@ body {
   width: 100%;
   height: calc(100% - 50px);
   padding: 20px;
-  box-sizing: border-box;
+  box-sizing: border-box;   /* Include padding in width */
   outline: none;
   background: #fff0f5;
   color: #d6336c;
   caret-color: #ff1493;
   overflow: auto;
   font-size: 16px;
+  white-space: pre-wrap;    /* Preserve line breaks */
+  word-wrap: break-word;    /* Wrap long words */
 }
 
-
-/* Image container to allow resizing from every corner */
-.resizable-image {
+/* Draggable & Resizable Image */
+.resizable-draggable {
   display: inline-block;
-  resize: both;            /* Allow width & height resizing */
+  resize: both;                /* Resize from corners */
   overflow: hidden;
-  max-width: 100%;
-  min-width: 20px;
-  min-height: 20px;
+  min-width: 50px;
+  min-height: 50px;
+  max-width: 90%;
   border: 1px dashed #ff3399;
-  position: relative;
+  position: absolute;          /* Absolute inside editor */
+  cursor: move;
 }
 
-.resizable-image img {
-  display: block;
+.resizable-draggable img {
   width: 100%;
   height: 100%;
-  object-fit: contain;    /* maintain aspect ratio while resizing */
-  cursor: move;           /* indicate draggable area */
+  object-fit: contain;
+  display: block;
+  user-select: none;
+  pointer-events: none;        /* Parent div handles drag */
 }
+

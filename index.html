@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Toolbar -->
   <div class="toolbar">
     <!-- Text formatting -->
     <button onclick="execCmd('bold')" title="Bold"><b>B</b></button>
@@ -53,7 +52,7 @@
     <input type="color" onchange="execCmd('foreColor', this.value)" title="Text Color">
     <input type="color" onchange="execCmd('hiliteColor', this.value)" title="Highlight Color">
 
-    <!-- Insert Options -->
+    <!-- Insert -->
     <button onclick="insertLink()" title="Insert Hyperlink">Link</button>
     <button onclick="insertImage()" title="Insert Image">Image</button>
     <button onclick="insertTable()" title="Insert Table">Table</button>
@@ -65,7 +64,6 @@
     <input type="file" id="file-input" accept=".html,.txt,.doc" style="display:none">
   </div>
 
-  <!-- Editable content area -->
   <div id="editor" contenteditable="true" placeholder="Start typing..."></div>
 
   <script src="script.js"></script>
