@@ -1,4 +1,4 @@
-// -------------------- IMAGE MANAGER --------------------
+// IMAGE MANAGER
 class ImageManager {
   constructor(editor) { this.editor = editor; }
 
@@ -71,13 +71,13 @@ class ImageManager {
   }
 }
 
-// -------------------- STORAGE -
+// STORAGE 
 class StorageManager{
   static save(editor){ localStorage.setItem('barbie-richtext', editor.innerHTML);}//localstorage lets store data in browser
   static load(editor){ editor.innerHTML=localStorage.getItem('barbie-richtext')||"";}//looks for the saved item,if not found return empty string
 }
 
-// -------------------- TOOLBAR --------------------
+//TOOLBAR 
 class Toolbar {
   constructor(editor,imageManager){
     this.editor=editor; this.imageManager=imageManager; 
@@ -209,27 +209,39 @@ insertLink(){
 
 
   insertTable(){
-    const rows = parseInt(prompt("Rows:",2));
-    const cols = parseInt(prompt("Columns:",2));
-    if(!rows||!cols) return;
-    let table="<table style='border-collapse:collapse;width:auto;'>";
-    for(let i=0;i<rows;i++){
-      table+="<tr>";
-      for(let j=0;j<cols;j++){ table+="<td style='border:1px solid #d6336c;padding:5px;'>&nbsp;</td>"; }
-      table+="</tr>";
+  const rows = parseInt(prompt("Rows:",2));
+  const cols = parseInt(prompt("Columns:",2));
+  if(!rows||!cols) return;
+
+  // Create a container for the table
+  const container = document.createElement("span");
+  container.className = "draggable-table";
+
+  // Build table HTML
+  let table="<table style='border-collapse:collapse;width:auto;'>";
+  for(let i=0;i<rows;i++){
+    table+="<tr>";
+    for(let j=0;j<cols;j++){ 
+      table+="<td style='border:1px solid #d6336c;padding:5px;'>&nbsp;</td>"; 
     }
-    table+="</table><br>";
-    this.execCmd('insertHTML',table);
+    table+="</tr>";
   }
+  table+="</table>";
 
-  clearFormatting(){ this.execCmd('removeFormat'); alert("Formatting cleared!"); }
-  resetEditor(){ if(confirm("Reset editor?")){ this.editor.innerHTML=""; localStorage.removeItem("barbie-richtext"); } }
-  copyPlainText(){ navigator.clipboard.writeText(this.editor.innerText); alert("Copied as plain text!"); }
-  copyHTML(){ navigator.clipboard.writeText(this.editor.innerHTML); alert("Copied as HTML!"); }
-  preview(){ const w=window.open(); w.document.write(this.editor.innerHTML); w.document.close(); }
+  // Insert the table into container
+  container.innerHTML = table;
 
-  newFile(){ if(this.editor.innerHTML && !confirm("Clear current note?")) return; this.editor.innerHTML=""; localStorage.removeItem("barbie-richtext"); }
-  openFile(e){ const file=e.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=e=>this.editor.innerHTML=e.target.result; reader.readAsText(file); }
+  // Add a resize handle
+  const handle = document.createElement("span");
+  handle.className = "resize-handle";
+  container.appendChild(handle);
+
+  this.editor.appendChild(container);
+
+  // Make the container draggable & resizable
+  this.makeTableDraggableAndResizable(container);
+}
+
 
 insertPageBreak() {
   const pageBreak = document.createElement('div');
@@ -254,6 +266,46 @@ insertPageBreak() {
     this.editor.appendChild(pageBreak);
   }
 }
+makeTableDraggableAndResizable(container){
+  const table = container.querySelector("table");
+  const handle = container.querySelector(".resize-handle");
+
+  // --- Dragging ---
+  let isDragging = false, startX, startY;
+  container.addEventListener("mousedown", e => {
+    if(e.target === handle) return; // skip resize handle
+    isDragging = true;
+    startX = e.clientX - container.offsetLeft;
+    startY = e.clientY - container.offsetTop;
+    container.style.position = "absolute";
+  });
+
+  document.addEventListener("mousemove", e => {
+    if(!isDragging) return;
+    container.style.left = (e.clientX - startX) + "px";
+    container.style.top = (e.clientY - startY) + "px";
+  });
+
+  document.addEventListener("mouseup", ()=> isDragging = false);
+
+  // --- Resizing ---
+  let isResizing = false, startWidth, startHeight;
+  handle.addEventListener("mousedown", e => {
+    isResizing = true;
+    startX = e.clientX; startY = e.clientY;
+    startWidth = table.offsetWidth; startHeight = table.offsetHeight;
+    e.stopPropagation(); e.preventDefault();
+  });
+
+  document.addEventListener("mousemove", e => {
+    if(!isResizing) return;
+    table.style.width = (startWidth + e.clientX - startX) + "px";
+    table.style.height = (startHeight + e.clientY - startY) + "px";
+  });
+
+  document.addEventListener("mouseup", ()=> isResizing = false);
+}
+
 
 saveFile() {
   const format = prompt("Export as (doc/pdf/txt):","doc");
@@ -265,7 +317,7 @@ saveFile() {
   const contentText = this.editor.innerText;
 
   if (format.toLowerCase() === "pdf") {
-    // ✅ Use html2pdf.js for proper formatting & page breaks
+    // Use html2pdf.js for proper formatting & page breaks
     const opt = {
       margin:       10,
       filename:     title.replace(/\s/g,"_") + ".pdf",
@@ -320,7 +372,7 @@ saveFile() {
 
 }
 
-// -------------------- INIT --------------------
+// INIT 
 window.onload = () => {
   const editor = document.getElementById('editor');
   const imageManager = new ImageManager(editor);

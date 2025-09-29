@@ -234,3 +234,22 @@ body {
 }
 /* Page break for PDF export */
 .page-break { page-break-before: always; }
+/* draggable table*/
+.draggable-table {
+  display: inline-block;
+  position: relative;
+  margin: 10px;
+}
+
+.draggable-table .resize-handle {
+  width: 12px;
+  height: 12px;
+  background: #d6336c;
+  border: 2px solid white;
+  border-radius: 50%;
+  position: absolute;
+  right: -8px;
+  bottom: -8px;
+  cursor: se-resize;
+}
+
