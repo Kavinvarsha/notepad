@@ -486,4 +486,27 @@ window.onload = () => {
 
   StorageManager.load(editor);
   editor.addEventListener('input',()=>StorageManager.save(editor));
+  const themeToggleBtn = document.getElementById('theme-toggle');
+  const body = document.body;
+
+  // Load saved theme
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme) {
+    body.setAttribute('data-theme', savedTheme);
+    themeToggleBtn.textContent = savedTheme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+  }
+
+  // Toggle theme on click
+  themeToggleBtn.addEventListener('click', () => {
+    const currentTheme = body.getAttribute('data-theme');
+    if (currentTheme === 'dark') {
+      body.setAttribute('data-theme', 'light');
+      themeToggleBtn.textContent = '🌙 Dark Mode';
+      localStorage.setItem('theme', 'light');
+    } else {
+      body.setAttribute('data-theme', 'dark');
+      themeToggleBtn.textContent = '☀️ Light Mode';
+      localStorage.setItem('theme', 'dark');
+    }
+  });
 };
