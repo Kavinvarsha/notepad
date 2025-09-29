@@ -11,29 +11,29 @@ const justifyBtn = document.getElementById('justify-btn');
 const ulBtn = document.getElementById('ul-btn');
 const olBtn = document.getElementById('ol-btn');
 
-// --- Dropdowns ---
+
 const fontSizeSelect = document.getElementById('font-size-select');
 const fontStyleSelect = document.getElementById('font-style-select');
 const headingsSelect = document.getElementById('headings-select');
 
-// --- Color pickers ---
+
 const textColorPicker = document.getElementById('text-color-picker');
 const highlightColorPicker = document.getElementById('highlight-color-picker');
 
-// --- Execute formatting commands ---
+
 function execCmd(command, value = null) {
   document.execCommand(command, false, value);
   editor.focus();
   updateToolbarState();
 }
 
-// --- Insert hyperlink ---
+
 function insertLink() {
   const url = prompt("Enter URL:", "https://");
   if (url) execCmd('createLink', url);
 }
 
-// --- Insert table ---
+
 function insertTable() {
   const rows = prompt("Rows:", 2);
   const cols = prompt("Columns:", 2);
@@ -51,7 +51,7 @@ function insertTable() {
   execCmd('insertHTML', table);
 }
 
-// --- Make image draggable & resizable ---
+
 function makeImageDraggableAndResizable(container) {
   const img = container.querySelector('img');
   const handle = container.querySelector('.resize-handle');
@@ -97,7 +97,7 @@ function makeImageDraggableAndResizable(container) {
   document.addEventListener('mouseup', () => { isResizing = false; });
 }
 
-// --- Insert image ---
+
 function insertImage() {
   const choice = prompt("Insert from URL or local file? (url/file)");
   if (!choice) return;
@@ -133,19 +133,19 @@ function insertImage() {
   } else alert("Invalid option! Type 'url' or 'file'.");
 }
 
-// --- Auto-save ---
+
 editor.addEventListener("input", () => {
   localStorage.setItem("barbie-richtext", editor.innerHTML);
 });
 
-// --- Load saved content ---
+
 window.onload = () => {
   editor.innerHTML = localStorage.getItem("barbie-richtext") || "";
   updateToolbarState();
   resizeCanvas();
 };
 
-// --- New file ---
+
 document.getElementById("new-btn").addEventListener("click", () => {
   if(editor.innerHTML !== "" && !confirm("Clear current note?")) return;
   editor.innerHTML = "";
@@ -153,7 +153,7 @@ document.getElementById("new-btn").addEventListener("click", () => {
   clearDrawing();
 });
 
-// --- Open file ---
+
 const fileInput = document.getElementById("file-input");
 document.getElementById("open-btn").addEventListener("click", () => fileInput.click());
 fileInput.addEventListener("change", (e) => {
@@ -168,7 +168,7 @@ fileInput.addEventListener("change", (e) => {
   reader.readAsText(file);
 });
 
-// --- Save file ---
+
 document.getElementById("save-btn").addEventListener("click", () => {
   const format = prompt("Export as (doc/pdf):", "doc");
   if (!format) return;
@@ -217,14 +217,14 @@ document.getElementById("save-btn").addEventListener("click", () => {
   }
 });
 
-// --- Document Operations ---
+
 function clearFormatting() { document.execCommand('removeFormat', false, null); alert("Formatting cleared!"); }
 function resetEditor() { if(confirm("Are you sure you want to reset the editor?")) { editor.innerHTML = ""; localStorage.removeItem("barbie-richtext"); clearDrawing(); } }
 function copyPlainText() { navigator.clipboard.writeText(editor.innerText); alert("Copied as plain text!"); }
 function copyHTML() { navigator.clipboard.writeText(editor.innerHTML); alert("Copied as HTML!"); }
 function previewContent() { const previewWindow = window.open("", "_blank"); previewWindow.document.write(editor.innerHTML); previewWindow.document.close(); }
 
-// --- Active Toolbar Highlighting ---
+
 function updateToolbarState() {
   boldBtn.classList.toggle('active', document.queryCommandState('bold'));
   italicBtn.classList.toggle('active', document.queryCommandState('italic'));
@@ -253,19 +253,19 @@ editor.addEventListener('mouseup', updateToolbarState);
 editor.addEventListener('focus', updateToolbarState);
 editor.addEventListener('blur', updateToolbarState);
 
-// --- Update dropdowns ---
+
 if (fontSizeSelect) fontSizeSelect.addEventListener('change', () => execCmd('fontSize', fontSizeSelect.value));
 if (fontStyleSelect) fontStyleSelect.addEventListener('change', () => execCmd('fontName', fontStyleSelect.value));
 if (headingsSelect) headingsSelect.addEventListener('change', () => execCmd('formatBlock', headingsSelect.value));
 
-// --- Drawing Feature ---
+
 const canvas = document.createElement('canvas');
 canvas.id = 'draw-canvas';
 document.body.appendChild(canvas);
 const ctx = canvas.getContext('2d');
 
 let drawing = false;
-let currentTool = null; // null means typing mode
+let currentTool = null; 
 let lastX = 0, lastY = 0;
 
 function resizeCanvas() {
@@ -274,8 +274,8 @@ function resizeCanvas() {
   canvas.style.position = "absolute";
   canvas.style.top = editor.offsetTop + "px";
   canvas.style.left = editor.offsetLeft + "px";
-  canvas.style.zIndex = -1; // hidden by default
-  canvas.style.pointerEvents = "none"; // disabled by default
+  canvas.style.zIndex = -1; 
+  canvas.style.pointerEvents = "none"; 
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
@@ -285,7 +285,6 @@ function setTool(tool, button) {
   buttons.forEach(id => document.getElementById(id)?.classList.remove('active'));
 
   if (currentTool === tool) {
-    // Toggle OFF if clicked again
     currentTool = null;
     canvas.style.zIndex = -1;
     canvas.style.pointerEvents = "none";
@@ -351,7 +350,6 @@ canvas.addEventListener("touchend", endDraw);
 
 function clearDrawing() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
-// --- Toolbar drawing buttons ---
 document.getElementById('pen-btn')?.addEventListener('click', () => setTool('pen', 'pen-btn'));
 document.getElementById('highlighter-btn')?.addEventListener('click', () => setTool('highlighter', 'highlighter-btn'));
 document.getElementById('eraser-btn')?.addEventListener('click', () => setTool('eraser', 'eraser-btn'));
