@@ -211,3 +211,7 @@ body {
   opacity: 1;
   transform: rotate(20deg);
 }
+/* Page break for PDF export */
+.page-break {
+  page-break-before: always;
+}

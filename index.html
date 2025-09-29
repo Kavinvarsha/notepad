@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Barbie Rich Text Notepad</title>
+  <title>Text Notepad</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="toolbar">
     <!-- Text formatting -->
-    <button id="bold-btn" onclick="execCmd('bold')" title="Bold">B</button>
-    <button id="italic-btn" onclick="execCmd('italic')" title="Italic">I</button>
-    <button id="underline-btn" onclick="execCmd('underline')" title="Underline">U</button>
+    <button id="bold-btn" title="Bold">B</button>
+    <button id="italic-btn" title="Italic">I</button>
+    <button id="underline-btn" title="Underline">U</button>
 
     <!-- Headings -->
-    <select id="headings-select" onchange="execCmd('formatBlock', this.value)">
+    <select id="headings-select">
       <option value="p">Normal</option>
       <option value="h1">H1</option>
       <option value="h2">H2</option>
@@ -22,7 +22,7 @@
     </select>
 
     <!-- Font size -->
-    <select id="font-size-select" onchange="execCmd('fontSize', this.value)">
+    <select id="font-size-select">
       <option value="3">Normal</option>
       <option value="4">Large</option>
       <option value="5">Larger</option>
@@ -30,39 +30,40 @@
     </select>
 
     <!-- Font style -->
-    <select id="font-style-select" onchange="execCmd('fontName', this.value)">
+    <select id="font-style-select">
       <option value="Comic Sans MS">Comic Sans</option>
       <option value="Arial">Arial</option>
       <option value="Verdana">Verdana</option>
     </select>
 
     <!-- Alignment -->
-    <button id="left-btn" onclick="execCmd('justifyLeft')" title="Left">Left</button>
-    <button id="center-btn" onclick="execCmd('justifyCenter')" title="Center">Center</button>
-    <button id="right-btn" onclick="execCmd('justifyRight')" title="Right">Right</button>
-    <button id="justify-btn" onclick="execCmd('justifyFull')" title="Justify">Justify</button>
+    <button id="left-btn" title="Left">Left</button>
+    <button id="center-btn" title="Center">Center</button>
+    <button id="right-btn" title="Right">Right</button>
+    <button id="justify-btn" title="Justify">Justify</button>
 
     <!-- Lists -->
-    <button id="ul-btn" onclick="execCmd('insertUnorderedList')" title="Unordered List">&#8226; List</button>
-    <button id="ol-btn" onclick="execCmd('insertOrderedList')" title="Ordered List">1. List</button>
-    <button onclick="execCmd('indent')" title="Increase Indent">&#8594; Indent</button>
-    <button onclick="execCmd('outdent')" title="Decrease Indent">&#8592; Outdent</button>
+    <button id="ul-btn" title="Unordered List">&#8226; List</button>
+    <button id="ol-btn" title="Ordered List">1. List</button>
+    <button id="indent-btn" title="Increase Indent">&#8594; Indent</button>
+    <button id="outdent-btn" title="Decrease Indent">&#8592; Outdent</button>
 
     <!-- Colors -->
-    <input type="color" id="text-color-picker" onchange="execCmd('foreColor', this.value)" title="Text Color">
-    <input type="color" id="highlight-color-picker" onchange="execCmd('hiliteColor', this.value)" title="Highlight Color">
+    <input type="color" id="text-color-picker" title="Text Color">
+    <input type="color" id="highlight-color-picker" title="Highlight Color">
 
     <!-- Insert -->
-    <button onclick="insertLink()" title="Insert Hyperlink">Link</button>
-    <button onclick="insertImage()" title="Insert Image">Image</button>
-    <button onclick="insertTable()" title="Insert Table">Table</button>
+    <button id="link-btn" title="Insert Hyperlink">Link</button>
+    <button id="image-btn" title="Insert Image">Image</button>
+    <button id="table-btn" title="Insert Table">Table</button>
+    <button id="page-break-btn">Page Break</button>
 
     <!-- Document operations -->
-    <button onclick="clearFormatting()">Clear Format</button>
-    <button onclick="resetEditor()">Reset Editor</button>
-    <button onclick="copyPlainText()">Copy Text</button>
-    <button onclick="copyHTML()">Copy HTML</button>
-    <button onclick="previewContent()">Preview</button>
+    <button id="clear-btn">Clear Format</button>
+    <button id="reset-btn">Reset Editor</button>
+    <button id="copy-text-btn">Copy Text</button>
+    <button id="copy-html-btn">Copy HTML</button>
+    <button id="preview-btn">Preview</button>
 
     <!-- File actions -->
     <button id="new-btn">New</button>
@@ -79,9 +80,14 @@
 
   <div id="editor" contenteditable="true" placeholder="Start typing..."></div>
 
-  <!-- Drawing canvas will be added dynamically by JS -->
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- html2canvas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+
   <script src="script.js"></script>
 </body>
 </html>
+
