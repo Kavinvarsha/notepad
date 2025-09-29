@@ -2,65 +2,66 @@
 class ImageManager {
   constructor(editor) { this.editor = editor; }
 
-  makeImageDraggableAndResizable(container) {
-    const img = container.querySelector('img');
-    const handle = container.querySelector('.resize-handle');
+  makeImageDraggableAndResizable(container) {//purpose make image draggable,resizable
+    const img = container.querySelector('img');//finds image element inside container
+    const handle = container.querySelector('.resize-handle');//find the resize handle inside container
 
-    let isDragging=false, startX, startY;
+    let isDragging=false, startX, startY;//dragging image and initial mouse positions
     container.addEventListener('mousedown', e=>{
-      if(e.target === handle) return;
+      if(e.target === handle) return;//user clicked resize handle
       isDragging = true;
       startX = e.clientX - container.offsetLeft;
       startY = e.clientY - container.offsetTop;
-      container.style.position = "absolute";
+      container.style.position = "absolute";//to move freely
     });
     document.addEventListener('mousemove', e=>{
-      if(!isDragging) return;
-      container.style.left = (e.clientX - startX) + 'px';
+      if(!isDragging) return;//prevents movement if the user isn’t dragging
+      container.style.left = (e.clientX - startX) + 'px';//move container horizontally following mouse
       container.style.top = (e.clientY - startY) + 'px';
     });
-    document.addEventListener('mouseup', ()=> isDragging=false);
+    document.addEventListener('mouseup', ()=> isDragging=false);//user releases mouse,stop dragging
 
-    let isResizing=false, startWidth, startHeight;
+    let isResizing=false, startWidth, startHeight;//resizing image and initial dimensions
     handle.addEventListener('mousedown', e=>{
       isResizing = true;
-      startX = e.clientX; startY = e.clientY;
-      startWidth = img.offsetWidth; startHeight = img.offsetHeight;
-      e.stopPropagation(); e.preventDefault();
+      startX = e.clientX; startY = e.clientY;//initial mouse positions 
+      startWidth = img.offsetWidth; startHeight = img.offsetHeight;//current image size
+      e.stopPropagation(); e.preventDefault();//prevent dragging when resizing
     });
     document.addEventListener('mousemove', e=>{
       if(!isResizing) return;
-      img.style.width = (startWidth + e.clientX - startX) + 'px';
-      img.style.height = (startHeight + e.clientY - startY) + 'px';
+      img.style.width = (startWidth + e.clientX - startX) + 'px';//new width: initial width + horizontal distance mouse moved.
+      img.style.height = (startHeight + e.clientY - startY) + 'px';//new height
     });
-    document.addEventListener('mouseup', ()=> isResizing=false);
+    document.addEventListener('mouseup', ()=> isResizing=false);//stop resizing when user releases mouse
   }
 
   insertImage() {
     const choice = prompt("Insert from URL or local file? (url/file)");
     if(!choice) return;
 
-    const addImageContainer = src => {
-      const container = document.createElement('span');
+    const addImageContainer = src => {//small function to take image source and add it in editor
+      const container = document.createElement('span');//html container for image+handle
       container.className = "draggable-image";
       const img = document.createElement('img');
-      img.src = src;
-      const handle = document.createElement('span');
+      img.src = src;//set image source
+      const handle = document.createElement('span');//resize handle
       handle.className = "resize-handle";
-      container.appendChild(img); container.appendChild(handle);
-      this.editor.appendChild(container);
-      this.makeImageDraggableAndResizable(container);
+      container.appendChild(img); 
+      container.appendChild(handle);//add image and handle to container
+      this.editor.appendChild(container);//adds the container into the editor, so the image appears on the page.
+      this.makeImageDraggableAndResizable(container);//calls the draggable and resizable method
     };
 
     if(choice.toLowerCase() === "url"){
       const url = prompt("Enter image URL:");
-      if(url) addImageContainer(url);
+      if(url) addImageContainer(url);//if the user typed something → insert it in editor.
     } else if(choice.toLowerCase() === "file"){
       const fileInput = document.createElement("input");
-      fileInput.type="file"; fileInput.accept="image/*";
+      fileInput.type="file"; fileInput.accept="image/*";//restrict to image files
       fileInput.onchange = () => {
-        const file = fileInput.files[0];
-        if(!file) return;
+        const file = fileInput.files[0];//get the first selected file
+        if(!file) return;//no file selected ,stop 
         const reader = new FileReader();
         reader.onload = e => addImageContainer(e.target.result);
         reader.readAsDataURL(file);
@@ -70,87 +71,16 @@ class ImageManager {
   }
 }
 
-// -------------------- DRAWING CANVAS --------------------
-class DrawingCanvas {
-  constructor(editor, textColorPicker, highlightColorPicker){
-    this.editor = editor;
-    this.textColorPicker = textColorPicker;
-    this.highlightColorPicker = highlightColorPicker;
-
-    this.canvas = document.createElement('canvas');
-    this.canvas.id='draw-canvas'; document.body.appendChild(this.canvas);
-    this.ctx = this.canvas.getContext('2d');
-
-    this.drawing=false; this.currentTool=null; this.lastX=0; this.lastY=0;
-
-    this.resizeCanvas();
-    window.addEventListener('resize', ()=>this.resizeCanvas());
-    this.initEvents();
-  }
-
-  resizeCanvas(){
-    this.canvas.width = this.editor.offsetWidth;
-    this.canvas.height = this.editor.offsetHeight;
-    this.canvas.style.position="absolute";
-    this.canvas.style.top=this.editor.offsetTop+"px";
-    this.canvas.style.left=this.editor.offsetLeft+"px";
-    this.canvas.style.zIndex=-1;
-    this.canvas.style.pointerEvents="none";
-  }
-
-  setTool(tool){
-    this.currentTool = (this.currentTool===tool)? null : tool;
-    this.canvas.style.zIndex = this.currentTool? 20:-1;
-    this.canvas.style.pointerEvents = this.currentTool? "auto":"none";
-  }
-
-  getXY(e){
-    if(e.touches) e=e.touches[0];
-    const rect = this.canvas.getBoundingClientRect();
-    return { x:e.clientX-rect.left, y:e.clientY-rect.top };
-  }
-
-  startDraw(e){
-    if(!this.currentTool) return;
-    this.drawing=true;
-    const pos = this.getXY(e); this.lastX=pos.x; this.lastY=pos.y;
-    e.preventDefault();
-  }
-
-  draw(e){
-    if(!this.drawing || !this.currentTool) return;
-    const pos = this.getXY(e);
-    const ctx = this.ctx;
-
-    if(this.currentTool==='highlighter'){ ctx.strokeStyle=this.highlightColorPicker?.value||'#ff66b2'; ctx.lineWidth=15; ctx.globalAlpha=0.3;}
-    else if(this.currentTool==='pen'){ ctx.strokeStyle=this.textColorPicker?.value||'#ff1493'; ctx.lineWidth=3; ctx.globalAlpha=1;}
-    else if(this.currentTool==='eraser'){ ctx.globalCompositeOperation='destination-out'; ctx.lineWidth=15;}
-
-    ctx.lineCap='round'; ctx.beginPath(); ctx.moveTo(this.lastX,this.lastY); ctx.lineTo(pos.x,pos.y); ctx.stroke();
-    this.lastX=pos.x; this.lastY=pos.y; e.preventDefault();
-  }
-
-  endDraw(){ this.drawing=false; }
-
-  clearDrawing(){ this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height); }
-
-  initEvents(){
-    ['mousedown','touchstart'].forEach(evt => this.canvas.addEventListener(evt,e=>this.startDraw(e)));
-    ['mousemove','touchmove'].forEach(evt => this.canvas.addEventListener(evt,e=>this.draw(e)));
-    ['mouseup','mouseleave','touchend'].forEach(evt => this.canvas.addEventListener(evt,()=>this.endDraw()));
-  }
-}
-
-// -------------------- STORAGE --------------------
+// -------------------- STORAGE -
 class StorageManager{
-  static save(editor){ localStorage.setItem('barbie-richtext', editor.innerHTML);}
-  static load(editor){ editor.innerHTML=localStorage.getItem('barbie-richtext')||"";}
+  static save(editor){ localStorage.setItem('barbie-richtext', editor.innerHTML);}//localstorage lets store data in browser
+  static load(editor){ editor.innerHTML=localStorage.getItem('barbie-richtext')||"";}//looks for the saved item,if not found return empty string
 }
 
 // -------------------- TOOLBAR --------------------
 class Toolbar {
-  constructor(editor,imageManager,drawingCanvas){
-    this.editor=editor; this.imageManager=imageManager; this.drawingCanvas=drawingCanvas;
+  constructor(editor,imageManager){
+    this.editor=editor; this.imageManager=imageManager; 
 
     // Buttons & Selects
     this.boldBtn = document.getElementById('bold-btn');
@@ -186,33 +116,28 @@ class Toolbar {
     this.textColorPicker = document.getElementById('text-color-picker');
     this.highlightColorPicker = document.getElementById('highlight-color-picker');
 
-    this.penBtn = document.getElementById('pen-btn');
-    this.highlighterBtn = document.getElementById('highlighter-btn');
-    this.eraserBtn = document.getElementById('eraser-btn');
-    this.clearDrawBtn = document.getElementById('clear-draw-btn');
-    this.pageBreakBtn = document.getElementById('page-break-btn');
-
+   
 
 
     this.initEvents();
   }
 
-  execCmd(cmd,value=null){ this.editor.focus(); document.execCommand(cmd,false,value); this.updateToolbarState(); }
+  execCmd(cmd,value=null){ this.editor.focus(); document.execCommand(cmd,false,value); this.updateToolbarState(); }//Run a command (like bold, italic, insert list) on the selected text.
 
   updateToolbarState(){
     [['bold',this.boldBtn],['italic',this.italicBtn],['underline',this.underlineBtn],
     ['justifyLeft',this.leftAlignBtn],['justifyCenter',this.centerAlignBtn],['justifyRight',this.rightAlignBtn],
     ['justifyFull',this.justifyBtn],['insertUnorderedList',this.ulBtn],['insertOrderedList',this.olBtn]]
-    .forEach(([cmd,btn])=>btn?.classList.toggle('active',document.queryCommandState(cmd)));
+    .forEach(([cmd,btn])=>btn?.classList.toggle('active',document.queryCommandState(cmd)));//returns true if command is active at cursor position
 
-    let block = document.queryCommandValue('formatBlock'); if(block) block=block.replace(/["<>]/g,'').toLowerCase();
-    if(this.headingsSelect) this.headingsSelect.value = ['h1','h2','h3'].includes(block)? block:'p';
+    let block = document.queryCommandValue('formatBlock'); if(block) block=block.replace(/["<>]/g,'').toLowerCase();//Returns current block element 
+    if(this.headingsSelect) this.headingsSelect.value = ['h1','h2','h3'].includes(block)? block:'p';//if current block is h1,h2,h3 set it,else set to p
     if(this.fontSizeSelect) this.fontSizeSelect.value = document.queryCommandValue('fontSize')||'3';
     if(this.fontStyleSelect) this.fontStyleSelect.value = document.queryCommandValue('fontName').replace(/["']/g,'')||'Comic Sans MS';
   }
 
   initEvents(){
-    ['keyup','mouseup','focus','blur'].forEach(evt=>this.editor.addEventListener(evt,()=>this.updateToolbarState()));
+    ['keyup','mouseup','focus','blur'].forEach(evt=>this.editor.addEventListener(evt,()=>this.updateToolbarState()));//Whenever user types (keyup), clicks (mouseup), focuses, or blurs editor → update toolbar state.
 
     this.boldBtn?.addEventListener('click',()=>this.execCmd('bold'));
     this.italicBtn?.addEventListener('click',()=>this.execCmd('italic'));
@@ -247,11 +172,7 @@ class Toolbar {
     this.fileInput?.addEventListener('change',e=>this.openFile(e));
     this.saveBtn?.addEventListener('click',()=>this.saveFile());
 
-    this.penBtn?.addEventListener('click',()=>this.drawingCanvas.setTool('pen'));
-    this.highlighterBtn?.addEventListener('click',()=>this.drawingCanvas.setTool('highlighter'));
-    this.eraserBtn?.addEventListener('click',()=>this.drawingCanvas.setTool('eraser'));
-    this.clearDrawBtn?.addEventListener('click',()=>this.drawingCanvas.clearDrawing());
-    this.pageBreakBtn?.addEventListener('click', () => this.insertPageBreak());
+    
   }
 
 
@@ -334,84 +255,6 @@ insertPageBreak() {
   }
 }
 
-
-// saveFile() {
-//   const format = prompt("Export as (doc/pdf/txt):","doc");
-//   if(!format) return;
-
-//   const title = prompt("Enter title:","My Note") || "My Note";
-//   const author = prompt("Enter author:","Anonymous") || "Anonymous";
-//   const contentHTML = this.editor.innerHTML;
-//   const contentText = this.editor.innerText;
-
-//   if(format.toLowerCase() === "doc") {
-//     // Word export (images will work because <img> is embedded)
-//     const blob = new Blob([`
-//       <!DOCTYPE html>
-//       <html>
-//         <head>
-//           <meta charset="utf-8">
-//           <title>${title}</title>
-//         </head>
-//         <body>
-//           <h1>${title}</h1>
-//           <p><em>Author: ${author}</em></p>
-//           ${contentHTML}
-//         </body>
-//       </html>
-//     `], { type: "application/msword" });
-
-//     const link = document.createElement("a");
-//     link.href = URL.createObjectURL(blob);
-//     link.download = title.replace(/\s/g, "_") + ".doc";
-//     link.click();
-//     URL.revokeObjectURL(link.href);
-//     alert("Exported as Word (.doc)");
-
-//   } else if(format.toLowerCase() === "pdf") {
-//     // PDF export using html2canvas + jsPDF
-//     if(!window.jspdf || !window.html2canvas) return alert("jsPDF and html2canvas required!");
-
-//     html2canvas(this.editor, { scale: 2 }).then(canvas => {
-//       const imgData = canvas.toDataURL('image/png');
-//       const { jsPDF } = window.jspdf;
-//       const pdf = new jsPDF('p', 'pt', 'a4');
-//       const pageWidth = pdf.internal.pageSize.getWidth();
-//       const pageHeight = pdf.internal.pageSize.getHeight();
-//       const imgProps = pdf.getImageProperties(imgData);
-//       const pdfWidth = pageWidth - 20;
-//       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-//       let heightLeft = pdfHeight;
-//       let position = 10;
-
-//       pdf.addImage(imgData, 'PNG', 10, position, pdfWidth, pdfHeight);
-//       heightLeft -= pageHeight;
-
-//       while(heightLeft > 0){
-//         pdf.addPage();
-//         position = 10;
-//         pdf.addImage(imgData, 'PNG', 10, position - (pdfHeight - heightLeft), pdfWidth, pdfHeight);
-//         heightLeft -= pageHeight;
-//       }
-
-//       pdf.save(title.replace(/\s/g, "_") + ".pdf");
-//       alert("Exported as PDF");
-//     });
-
-//   } else if(format.toLowerCase() === "txt") {
-//     const blob = new Blob([`Title: ${title}\nAuthor: ${author}\n\n${contentText}`], { type: "text/plain" });
-//     const link = document.createElement("a");
-//     link.href = URL.createObjectURL(blob);
-//     link.download = title.replace(/\s/g, "_") + ".txt";
-//     link.click();
-//     URL.revokeObjectURL(link.href);
-//     alert("Exported as TXT");
-
-//   } else {
-//     alert("Invalid format! Use 'doc','pdf', or 'txt'.");
-//   }
-// }
 saveFile() {
   const format = prompt("Export as (doc/pdf/txt):","doc");
   if (!format) return;
@@ -481,8 +324,7 @@ saveFile() {
 window.onload = () => {
   const editor = document.getElementById('editor');
   const imageManager = new ImageManager(editor);
-  const drawingCanvas = new DrawingCanvas(editor, document.getElementById('text-color-picker'), document.getElementById('highlight-color-picker'));
-  const toolbar = new Toolbar(editor,imageManager,drawingCanvas);
+  const toolbar = new Toolbar(editor, imageManager);
 
   StorageManager.load(editor);
   editor.addEventListener('input',()=>StorageManager.save(editor));
