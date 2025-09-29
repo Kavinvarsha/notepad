@@ -64,34 +64,56 @@ body {
   top: 0;
   left: 0;
   width: 100%;
-  height: 55px;
-  background: var(--toolbar-bg);
+  background: linear-gradient(to right, #ff99cc, #ff66b2, #ff3399);
   display: flex;
+  flex-wrap: wrap;           /* allows multiple rows */
+  justify-content: flex-start; /* align buttons neatly at start */
   align-items: center;
   padding: 6px 12px;
   box-sizing: border-box;
   z-index: 10;
-  border-bottom: 3px solid var(--toolbar-btn-bg);
-  gap: 8px;
-  overflow-x: auto;
+  border-bottom: 3px solid #ff3399;
+  gap: 8px 10px;             /* horizontal & vertical gaps */
   box-shadow: 0px 4px 12px rgba(255, 51, 153, 0.5);
+  max-height: auto;
 }
 
+/* Group buttons into blocks to balance rows */
+.toolbar .btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;                  /* distribute groups evenly */
+  justify-content: flex-start;
+  margin-bottom: 4px;       /* spacing between rows */
+}
+
+/* Make buttons uniform */
 .toolbar button,
 .toolbar select,
 .toolbar input[type=color] {
-  cursor: pointer;
+  flex: none;
   padding: 6px 12px;
   font-size: 14px;
   border-radius: 12px;
   border: 2px solid #fff;
-  background: var(--toolbar-btn-bg);
+  background: linear-gradient(to bottom, #ff66b2, #ff3399);
   color: #fff;
   font-weight: bold;
   text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-  transition: all 0.3s ease;
   box-shadow: 0 3px 6px rgba(255, 20, 147, 0.4);
+  transition: all 0.3s ease;
 }
+
+/* Optional: center the second row nicely */
+.toolbar .row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;  /* center buttons in row */
+  gap: 8px;
+  width: 100%;
+}
+
 
 .toolbar button:hover,
 .toolbar select:hover,
