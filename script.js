@@ -16,6 +16,10 @@ const fontSizeSelect = document.getElementById('font-size-select');
 const fontStyleSelect = document.getElementById('font-style-select');
 const headingsSelect = document.getElementById('headings-select');
 
+// --- Color pickers ---
+const textColorPicker = document.getElementById('text-color-picker');
+const highlightColorPicker = document.getElementById('highlight-color-picker');
+
 // --- Execute formatting commands ---
 function execCmd(command, value = null) {
   document.execCommand(command, false, value);
@@ -138,7 +142,7 @@ editor.addEventListener("input", () => {
 window.onload = () => {
   editor.innerHTML = localStorage.getItem("barbie-richtext") || "";
   updateToolbarState();
-  resizeCanvas(); // ensure drawing layer fits editor
+  resizeCanvas();
 };
 
 // --- New file ---
@@ -231,6 +235,15 @@ function updateToolbarState() {
   justifyBtn.classList.toggle('active', document.queryCommandState('justifyFull'));
   ulBtn.classList.toggle('active', document.queryCommandState('insertUnorderedList'));
   olBtn.classList.toggle('active', document.queryCommandState('insertOrderedList'));
+    let block = document.queryCommandValue('formatBlock');
+  if (block) block = block.replace(/["<>]/g, '').toLowerCase();
+  if (headingsSelect) {
+    if (block === 'h1' || block === 'h2' || block === 'h3') {
+      headingsSelect.value = block;
+    } else {
+      headingsSelect.value = 'p';
+    }
+  }
   if (fontSizeSelect) fontSizeSelect.value = document.queryCommandValue('fontSize') || '3';
   if (fontStyleSelect) fontStyleSelect.value = document.queryCommandValue('fontName').replace(/["']/g, '') || 'Comic Sans MS';
   if (headingsSelect) headingsSelect.value = document.queryCommandValue('formatBlock').replace(/["']/g, '') || '';
@@ -250,8 +263,9 @@ const canvas = document.createElement('canvas');
 canvas.id = 'draw-canvas';
 document.body.appendChild(canvas);
 const ctx = canvas.getContext('2d');
+
 let drawing = false;
-let currentTool = 'pen';
+let currentTool = null; // null means typing mode
 let lastX = 0, lastY = 0;
 
 function resizeCanvas() {
@@ -260,45 +274,73 @@ function resizeCanvas() {
   canvas.style.position = "absolute";
   canvas.style.top = editor.offsetTop + "px";
   canvas.style.left = editor.offsetLeft + "px";
-  canvas.style.zIndex = 20;
+  canvas.style.zIndex = -1; // hidden by default
+  canvas.style.pointerEvents = "none"; // disabled by default
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-function setTool(tool) {
-  currentTool = tool;
-  if(tool === "pen") ctx.globalAlpha = 1.0;
-  if(tool === "highlighter") ctx.globalAlpha = 0.3;
-  if(tool === "eraser") ctx.globalCompositeOperation = (tool==="eraser")?"destination-out":"source-over";
+function setTool(tool, button) {
+  const buttons = ['pen-btn', 'highlighter-btn', 'eraser-btn'];
+  buttons.forEach(id => document.getElementById(id)?.classList.remove('active'));
+
+  if (currentTool === tool) {
+    // Toggle OFF if clicked again
+    currentTool = null;
+    canvas.style.zIndex = -1;
+    canvas.style.pointerEvents = "none";
+  } else {
+    currentTool = tool;
+    canvas.style.zIndex = 20;
+    canvas.style.pointerEvents = "auto";
+    document.getElementById(button)?.classList.add('active');
+  }
 }
 
 function getXY(e) {
-  if(e.touches) e = e.touches[0];
+  if (e.touches) e = e.touches[0];
   const rect = canvas.getBoundingClientRect();
   return { x: e.clientX - rect.left, y: e.clientY - rect.top };
 }
 
 function startDraw(e) {
+  if (!currentTool) return;
   drawing = true;
   const pos = getXY(e);
   lastX = pos.x;
   lastY = pos.y;
   e.preventDefault();
 }
+
 function draw(e) {
-  if(!drawing) return;
+  if (!drawing || !currentTool) return;
   const pos = getXY(e);
-  ctx.strokeStyle = currentTool==='highlighter'?"#ff66b2":"#ff1493";
-  ctx.lineWidth = currentTool==='highlighter'?15:3;
+
+  if (currentTool === 'highlighter') {
+    ctx.strokeStyle = highlightColorPicker ? highlightColorPicker.value : '#ff66b2';
+    ctx.lineWidth = 15;
+    ctx.globalAlpha = 0.3;
+  } else if (currentTool === 'pen') {
+    ctx.strokeStyle = textColorPicker ? textColorPicker.value : '#ff1493';
+    ctx.lineWidth = 3;
+    ctx.globalAlpha = 1.0;
+  } else if (currentTool === 'eraser') {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.lineWidth = 15;
+  }
+
   ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.moveTo(lastX,lastY);
-  ctx.lineTo(pos.x,pos.y);
+  ctx.moveTo(lastX, lastY);
+  ctx.lineTo(pos.x, pos.y);
   ctx.stroke();
-  lastX=pos.x; lastY=pos.y;
+  lastX = pos.x;
+  lastY = pos.y;
   e.preventDefault();
 }
-function endDraw(e){ drawing=false; }
+
+function endDraw() { drawing = false; }
+
 canvas.addEventListener("mousedown", startDraw);
 canvas.addEventListener("mousemove", draw);
 canvas.addEventListener("mouseup", endDraw);
@@ -306,10 +348,17 @@ canvas.addEventListener("mouseleave", endDraw);
 canvas.addEventListener("touchstart", startDraw);
 canvas.addEventListener("touchmove", draw);
 canvas.addEventListener("touchend", endDraw);
-function clearDrawing(){ ctx.clearRect(0,0,canvas.width,canvas.height); }
+
+function clearDrawing() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
 // --- Toolbar drawing buttons ---
-document.getElementById('pen-btn')?.addEventListener('click', ()=>setTool('pen'));
-document.getElementById('highlighter-btn')?.addEventListener('click', ()=>setTool('highlighter'));
-document.getElementById('eraser-btn')?.addEventListener('click', ()=>setTool('eraser'));
-document.getElementById('clear-draw-btn')?.addEventListener('click', ()=>clearDrawing());
+document.getElementById('pen-btn')?.addEventListener('click', () => setTool('pen', 'pen-btn'));
+document.getElementById('highlighter-btn')?.addEventListener('click', () => setTool('highlighter', 'highlighter-btn'));
+document.getElementById('eraser-btn')?.addEventListener('click', () => setTool('eraser', 'eraser-btn'));
+document.getElementById('clear-draw-btn')?.addEventListener('click', () => {
+  clearDrawing();
+  currentTool = null;
+  canvas.style.zIndex = -1;
+  canvas.style.pointerEvents = "none";
+  ['pen-btn', 'highlighter-btn', 'eraser-btn'].forEach(id => document.getElementById(id)?.classList.remove('active'));
+});

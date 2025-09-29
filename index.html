@@ -15,10 +15,10 @@
 
     <!-- Headings -->
     <select id="headings-select" onchange="execCmd('formatBlock', this.value)">
-      <option value="">Normal</option>
-      <option value="H1">H1</option>
-      <option value="H2">H2</option>
-      <option value="H3">H3</option>
+      <option value="p">Normal</option>
+      <option value="h1">H1</option>
+      <option value="h2">H2</option>
+      <option value="h3">H3</option>
     </select>
 
     <!-- Font size -->
@@ -49,8 +49,8 @@
     <button onclick="execCmd('outdent')" title="Decrease Indent">&#8592; Outdent</button>
 
     <!-- Colors -->
-    <input type="color" onchange="execCmd('foreColor', this.value)" title="Text Color">
-    <input type="color" onchange="execCmd('hiliteColor', this.value)" title="Highlight Color">
+    <input type="color" id="text-color-picker" onchange="execCmd('foreColor', this.value)" title="Text Color">
+    <input type="color" id="highlight-color-picker" onchange="execCmd('hiliteColor', this.value)" title="Highlight Color">
 
     <!-- Insert -->
     <button onclick="insertLink()" title="Insert Hyperlink">Link</button>
