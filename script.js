@@ -246,6 +246,30 @@ copyHTML() {
       alert("Copy failed. Your browser may not support clipboard access.");
     });
 }
+newFile() {
+  if (!this.editor) return;
+
+  const content = this.editor.innerHTML.trim();
+  const saved = localStorage.getItem('barbie-richtext') || '';
+
+  // If there are unsaved changes, offer to save first
+  if (content && content !== saved) {
+    const saveFirst = confirm(
+      "You have unsaved changes.\n\nPress OK to save them first, or Cancel to continue without saving."
+    );
+    if (saveFirst) {
+      try { this.saveFile(); } catch (e) { console.warn("saveFile() failed:", e); }
+    }
+  }
+
+  // Final confirmation before clearing editor
+  const proceed = confirm("Create a new document? This will clear the editor.");
+  if (!proceed) return;
+
+  this.editor.innerHTML = "";
+  StorageManager.save(this.editor);   // update localStorage to empty
+  this.updateToolbarState();          // refresh toolbar (buttons, selects)
+}
 
 
 
