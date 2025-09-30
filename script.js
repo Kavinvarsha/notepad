@@ -271,6 +271,36 @@ newFile() {
   this.updateToolbarState();          // refresh toolbar (buttons, selects)
 }
 
+clearFormatting() {
+  const selection = window.getSelection();
+  if (selection && !selection.isCollapsed) {
+    // Case 1: Clear only the selected range
+    const range = selection.getRangeAt(0);
+    const text = range.toString();
+
+    // Replace the selection with plain text (removes formatting)
+    range.deleteContents();
+    range.insertNode(document.createTextNode(text));
+
+    // Reset selection after replacing
+    selection.removeAllRanges();
+    const newRange = document.createRange();
+    newRange.setStartAfter(range.endContainer);
+    newRange.collapse(true);
+    selection.addRange(newRange);
+
+  } else {
+    // Case 2: No selection → clear whole editor
+    if (confirm("Clear all formatting from the entire document?")) {
+      this.editor.innerHTML = this.editor.innerText; 
+    }
+  }
+
+  this.updateToolbarState();
+  StorageManager.save(this.editor);
+}
+
+
 
 
   insertTable(){
