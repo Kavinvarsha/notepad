@@ -207,6 +207,47 @@ insertLink(){
     }
 }
 
+resetEditor() {
+  if (confirm("Are you sure you want to reset the editor? This will clear all content.")) {
+    this.editor.innerHTML = "";  // clear editor
+    StorageManager.save(this.editor); // update localStorage
+    this.updateToolbarState(); // reset toolbar state
+  }
+}
+copyPlainText() {
+  const text = this.editor.innerText.trim();
+  if (!text) {
+    alert("Editor is empty, nothing to copy!");
+    return;
+  }
+
+  navigator.clipboard.writeText(text)
+    .then(() => {
+      alert("Plain text copied to clipboard!");
+    })
+    .catch(err => {
+      console.error("Failed to copy text:", err);
+      alert("Copy failed. Your browser may not support clipboard access.");
+    });
+}
+copyHTML() {
+  const html = this.editor.innerHTML.trim();
+  if (!html) {
+    alert("Editor is empty, nothing to copy!");
+    return;
+  }
+
+  navigator.clipboard.writeText(html)
+    .then(() => {
+      alert("HTML copied to clipboard!");
+    })
+    .catch(err => {
+      console.error("Failed to copy HTML:", err);
+      alert("Copy failed. Your browser may not support clipboard access.");
+    });
+}
+
+
 
   insertTable(){
   const rows = parseInt(prompt("Rows:",2));
